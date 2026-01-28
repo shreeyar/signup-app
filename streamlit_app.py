@@ -3,10 +3,10 @@
 
 import os
 import csv
-import pandas
 import threading
 from datetime import datetime
 import streamlit as st
+import pandas as pd
 
 # Configure a OneDrive-synced folder path via env var for portability
 # Example Windows: setx DATA_DIR "C:\\Users\\you\\OneDrive - OrgName\\form-data"

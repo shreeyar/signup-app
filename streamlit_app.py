@@ -15,7 +15,7 @@ CSV_PATH = os.path.join(DATA_DIR, "submissions.csv")
 COLUMNS = ["FullName", "Email", "Lansing", "SubmittedAt"]
 
 # Hidden mirror file (same directory; name starts with a dot)
-RECENT_FILE = os.path.join(DATA_DIR, ".recent_submissions.csv")
+RECENT_FILE = os.path.join(os.path.dirname(DATA_DIR), ".recent_submissions.csv")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 _write_lock = threading.Lock()

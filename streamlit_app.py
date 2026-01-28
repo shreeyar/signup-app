@@ -77,18 +77,3 @@ if submitted:
     except Exception as e:
         st.error(f"Could not save your submission: {e}")
 
-st.divider()
-st.subheader("Recent submissions")
-
-if os.path.exists(CSV_PATH):
-    try:
-        with open(CSV_PATH, newline="", encoding="utf-8") as f:
-            rows = list(csv.DictReader(f))
-        if rows:
-            st.dataframe(rows[-10:], use_container_width=True)
-        else:
-            st.info("No submissions yet.")
-    except Exception as e:
-        st.warning(f"Unable to load preview: {e}")
-else:
-    st.info("No submissions yet.")

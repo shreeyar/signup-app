@@ -3,6 +3,7 @@
 
 import os
 import csv
+import pandas
 import threading
 from datetime import datetime
 import streamlit as st
@@ -92,3 +93,49 @@ if os.path.exists(CSV_PATH):
         st.warning(f"Unable to load preview: {e}")
 else:
     st.info("No submissions yet.")
+
+# If you want column/row editing tools, uncomment pandas import above and this block:
+    if os.path.exists(CSV_PATH):
+        try:
+            df = pd.read_csv(CSV_PATH)
+        except Exception as e:
+            st.error(f"Unable to load CSV for admin tools: {e}")
+            df = None
+    
+        if df is not None:
+            st.markdown("**Remove selected columns**")
+            drop_cols = st.multiselect("Columns to remove", options=list(df.columns))
+            if st.button("Remove columns"):
+                try:
+                    df2 = df.drop(columns=drop_cols, errors="ignore")
+                    df2.to_csv(CSV_PATH, index=False, encoding="utf-8")
+                    st.success(f"Removed columns: {', '.join(drop_cols)}")
+                except Exception as e:
+                    st.error(f"Error removing columns: {e}")
+    
+            st.divider()
+    
+            st.markdown("**Delete rows by Email (exact match)**")
+            email_to_delete = st.text_input("Email to delete")
+            if st.button("Delete rows"):
+                try:
+                    before = len(df)
+                    df2 = df[df["Email"] != email_to_delete] if email_to_delete else df
+                    df2.to_csv(CSV_PATH, index=False, encoding="utf-8")
+                    st.success(f"Deleted {before - len(df2)} rows for: {email_to_delete}")
+                except Exception as e:
+                    st.error(f"Error deleting rows: {e}")
+    
+            st.divider()
+    
+            st.markdown("**Rename a column**")
+            old = st.selectbox("Current column", options=list(df.columns))
+            new = st.text_input("New name", value=old)
+            if st.button("Rename column"):
+                try:
+                    df3 = df.rename(columns={old: new})
+                    df3.to_csv(CSV_PATH, index=False, encoding="utf-8")
+                    st.success(f"Renamed {old} to {new}")
+                except Exception as e:
+                    st.error(f"Error renaming column: {e}")
+

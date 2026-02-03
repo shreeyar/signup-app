@@ -6,39 +6,38 @@ import csv
 import threading
 from datetime import datetime
 import streamlit as st
+from pathlib import Path
 import pandas as pd
 
 # Configure a OneDrive-synced folder path via env var for portability
 # Example Windows: setx DATA_DIR "C:\\Users\\you\\OneDrive - OrgName\\form-data"
 # Example macOS: export DATA_DIR="$HOME/Library/CloudStorage/OneDrive-OrgName/form-data"
-DATA_DIR = os.environ.get("DATA_DIR", "data")
-CSV_PATH = os.path.join(DATA_DIR, "submissions.csv")
+DATA_DIR = Path(os.environ.get("DATA_DIR", Path(__file__).resolve().parent / "data"))
+CSV_PATH = DATA_DIR / "submissions.csv"
 COLUMNS = ["FullName", "Email", "Lansing", "SubmittedAt"]
 
 # Hidden mirror file (same directory; name starts with a dot)
-RECENT_FILE = os.path.join(os.path.dirname(DATA_DIR), ".recent_submissions.csv")
+RECENT_FILE = DATA_DIR / ".recent_submissions.csv"
 
-os.makedirs(DATA_DIR, exist_ok=True)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 _write_lock = threading.Lock()
 
 def append_row(row_dict):
-    is_new = not os.path.exists(CSV_PATH) or os.path.getsize(CSV_PATH) == 0
     with _write_lock:
-        with open(CSV_PATH, "a", newline="", encoding="utf-8") as f:
+        is_new = (not CSV_PATH.exists()) or CSV_PATH.stat().st_size == 0
+        with CSV_PATH.open("a", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=COLUMNS)
             if is_new:
                 w.writeheader()
-            w.writerow(row_dict)
+            w.writerow({k: row_dict.get(k, "") for k in COLUMNS})
 
 def append_recent_row(row_dict):
-    # Append to hidden mirror file; write header if file is new/empty
-    is_new = not os.path.exists(RECENT_FILE) or os.path.getsize(RECENT_FILE) == 0
     with _write_lock:
-        with open(RECENT_FILE, "a", newline="", encoding="utf-8") as f:
+        is_new = (not RECENT_FILE.exists()) or RECENT_FILE.stat().st_size == 0
+        with RECENT_FILE.open("a", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=COLUMNS)
             if is_new:
                 w.writeheader()
-            # Only write known columns to keep schema stable
             w.writerow({k: row_dict.get(k, "") for k in COLUMNS})
 
 st.set_page_config(page_title="GenAI Session Sign-Up", page_icon="📝", layout="centered")
